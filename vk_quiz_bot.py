@@ -1,13 +1,13 @@
 import logging
+import random
 
 import environs
-import random
 import vk_api as vk
-from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.utils import get_random_id
-from quiz import create_quiz
 
+from quiz import create_quiz
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def receive_message(vk_token, text, question_answer, quiz_score):
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             if event.text == "Сдаться":
                 question = send_correct_answer(question=question,
-                                    user_id=event.user_id)
+                                               user_id=event.user_id)
 
             elif event.text == "Новый вопрос":
                 question = random.choice(list(question_answer))
@@ -42,9 +42,9 @@ def receive_message(vk_token, text, question_answer, quiz_score):
 
             else:
                 quiz_score = handle_solution_attempt(question=question,
-                                        answer=event.text,
-                                        user_id=event.user_id,
-                                        quiz_score=quiz_score)
+                                                     answer=event.text,
+                                                     user_id=event.user_id,
+                                                     quiz_score=quiz_score)
 
 
 def send_message(user_id, text, vk_token):
@@ -68,9 +68,11 @@ def send_message(user_id, text, vk_token):
 
 def handle_solution_attempt(question, answer, user_id, quiz_score):
     quiz_answer = question_answer[question]
-    if quiz_answer.partition('.')[0] == answer or quiz_answer.partition(' (')[0] == answer:
+    if quiz_answer.partition('.')[0] == answer or\
+            quiz_answer.partition(' (')[0] == answer:
         quiz_score += 1
-        answer_message = f'{quiz_answer} \n\n Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»'
+        answer_message = f'{quiz_answer} \n\n Правильно! Поздравляю!' \
+                         f' Для следующего вопроса нажми «Новый вопрос»'
         send_message(
             user_id=user_id,
             text=answer_message,
@@ -119,7 +121,7 @@ if __name__ == "__main__":
 
     vk_token = env.str("VK_TOKEN")
 
-    with open("../quiz-questions/1vs1200.txt", "r", encoding="KOI8-R") as file:
+    with open("quiz-questions/1vs1200.txt", "r", encoding="KOI8-R") as file:
         quiz = file.read().split('\n\n\n')
 
     question_answer = create_quiz(quiz)

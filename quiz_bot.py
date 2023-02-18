@@ -1,21 +1,19 @@
-import re
-from pprint import pprint
 import logging
-from textwrap import dedent
 import random
-from functools import partial
 from enum import Enum, auto
+from functools import partial
+from textwrap import dedent
 
 import environs
-from telegram.ext import (CallbackContext, CallbackQueryHandler,
-                          CommandHandler, ConversationHandler, Filters,
+from telegram import ReplyKeyboardMarkup
+from telegram.ext import (CommandHandler, ConversationHandler, Filters,
                           MessageHandler, Updater)
-from telegram import (Bot, InlineKeyboardButton, InlineKeyboardMarkup,
-                      KeyboardButton, ParseMode, ReplyKeyboardMarkup, Update)
+
 from quiz import create_quiz
 
 
 logger = logging.getLogger(__name__)
+
 
 class States(Enum):
     START = auto()
@@ -38,7 +36,8 @@ def start(update, context):
         resize_keyboard=True,
         one_time_keyboard=True
     )
-    update.message.reply_markdown_v2(text=greetings, reply_markup=markup)
+    update.message.reply_markdown_v2(text=greetings,
+                                     reply_markup=markup)
     return States.START
 
 
@@ -56,11 +55,13 @@ def handle_solution_attempt(update, context):
     question_answer = context.user_data["question_answer"]
     question = context.user_data["question"]
     quiz_answer = question_answer[question]
-    if quiz_answer.partition('.')[0] == answer or quiz_answer.partition(' (')[0] == answer:
+    if quiz_answer.partition('.')[0] == answer or\
+            quiz_answer.partition(' (')[0] == answer:
         score += 1
         context.user_data["score"] = score
         update.message.reply_text(text=f'{quiz_answer}')
-        answer_message = 'Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»'
+        answer_message = 'Правильно! Поздравляю!' \
+                         ' Для следующего вопроса нажми «Новый вопрос»'
         message_keyboard = [
             ["Новый вопрос", "Сдаться"],
             ["Мой счет"],
@@ -72,7 +73,8 @@ def handle_solution_attempt(update, context):
             one_time_keyboard=True
         )
 
-        update.message.reply_text(text=answer_message, reply_markup=markup)
+        update.message.reply_text(text=answer_message,
+                                  reply_markup=markup)
         return States.START
 
     else:
@@ -88,7 +90,8 @@ def handle_solution_attempt(update, context):
             one_time_keyboard=True
         )
 
-        update.message.reply_text(text=answer_message, reply_markup=markup)
+        update.message.reply_text(text=answer_message,
+                                  reply_markup=markup)
 
         return States.ANSWER
 
@@ -113,13 +116,13 @@ def send_score(update, context):
         resize_keyboard=True,
         one_time_keyboard=True
     )
-    update.message.reply_text(text=f'Ваш счет {score}', reply_markup=markup)
+    update.message.reply_text(text=f'Ваш счет {score}',
+                              reply_markup=markup)
     return States.START
 
 
 def error(update, context):
     update.message.reply_text('Произошла ошибка')
-
 
 
 if __name__ == '__main__':
@@ -136,7 +139,7 @@ if __name__ == '__main__':
 
     score = 0
 
-    with open("../quiz-questions/1vs1200.txt", "r", encoding="KOI8-R") as file:
+    with open("quiz-questions/1vs1200.txt", "r", encoding="KOI8-R") as file:
         quiz = file.read().split('\n\n\n')
 
     question_answer = create_quiz(quiz)
@@ -149,12 +152,14 @@ if __name__ == '__main__':
         states={
             States.START: [
                 MessageHandler(Filters.text("Мой счет"), send_score),
-                MessageHandler(Filters.text("Новый вопрос"), partial(handle_new_question_request,
+                MessageHandler(Filters.text("Новый вопрос"),
+                               partial(handle_new_question_request,
                                        question_answer=question_answer)),
             ],
             States.ANSWER: [
-                MessageHandler(Filters.text("Новый вопрос"), partial(handle_new_question_request,
-                                                                     question_answer=question_answer)),
+                MessageHandler(Filters.text("Новый вопрос"),
+                               partial(handle_new_question_request,
+                                       question_answer=question_answer)),
                 MessageHandler(Filters.text("Сдаться"), send_correct_answer),
                 MessageHandler(Filters.text("Мой счет"), send_score),
                 MessageHandler(Filters.text, handle_solution_attempt),
