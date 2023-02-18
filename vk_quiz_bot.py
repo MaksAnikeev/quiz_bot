@@ -1,3 +1,4 @@
+import argparse
 import logging
 import random
 
@@ -110,6 +111,14 @@ def send_score(quiz_score, user_id):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--quiz_path',
+        type=str,
+        help='quiz_path путь и название файла с вопросами и ответами',
+        default='quiz-questions/1vs1200.txt'
+    )
+    args = parser.parse_args()
 
     logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -121,7 +130,7 @@ if __name__ == "__main__":
 
     vk_token = env.str("VK_TOKEN")
 
-    with open("quiz-questions/1vs1200.txt", "r", encoding="KOI8-R") as file:
+    with open(args.quiz_path, "r", encoding="KOI8-R") as file:
         quiz = file.read().split('\n\n\n')
 
     question_answer = create_quiz(quiz)
