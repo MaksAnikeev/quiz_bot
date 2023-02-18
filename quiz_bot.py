@@ -12,6 +12,7 @@ from telegram.ext import (CallbackContext, CallbackQueryHandler,
                           MessageHandler, Updater)
 from telegram import (Bot, InlineKeyboardButton, InlineKeyboardMarkup,
                       KeyboardButton, ParseMode, ReplyKeyboardMarkup, Update)
+from quiz import create_quiz
 
 
 logger = logging.getLogger(__name__)
@@ -19,20 +20,6 @@ logger = logging.getLogger(__name__)
 class States(Enum):
     START = auto()
     ANSWER = auto()
-
-
-def create_quiz(quiz):
-    question_answer = {}
-
-    for part in quiz:
-        part = part.split('\n\n')
-        for element in part:
-            if re.search(r'\bВопрос\b', element):
-                question = element.partition(':\n')[2].replace('\n', '')
-            if re.search(r'\bОтвет\b', element):
-                answer = element.partition(':\n')[2].replace('\n', '')
-                question_answer[question] = answer
-    return question_answer
 
 
 def start(update, context):
@@ -65,7 +52,6 @@ def handle_new_question_request(update, context, question_answer):
 
 def handle_solution_attempt(update, context):
     global score
-    print(score)
     answer = update.message.text
     question_answer = context.user_data["question_answer"]
     question = context.user_data["question"]
