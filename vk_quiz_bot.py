@@ -14,16 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 def receive_message(vk_token, text, question_answer, quiz_score):
+    question = None
     vk_session = vk.VkApi(token=vk_token)
     longpoll = VkLongPoll(vk_session)
-    for event in longpoll.listen():
-        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            send_message(
-                user_id=event.user_id,
-                text=text,
-                vk_token=vk_token)
-            break
-
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             if event.text == "Сдаться":
@@ -40,6 +33,12 @@ def receive_message(vk_token, text, question_answer, quiz_score):
             elif event.text == "Мой счет":
                 send_score(quiz_score=quiz_score,
                            user_id=event.user_id)
+
+            elif not question:
+                send_message(
+                    user_id=event.user_id,
+                    text=text,
+                    vk_token=vk_token)
 
             else:
                 quiz_score = handle_solution_attempt(question=question,
