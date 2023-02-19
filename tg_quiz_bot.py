@@ -103,8 +103,8 @@ def handle_solution_attempt(update, context):
 def send_correct_answer(update, context):
     question_answer = context.bot_data['question_answer']
     question = context.user_data["question"]
-    quiz_answer = question_answer[question]
-    update.message.reply_text(text=f'{quiz_answer}')
+    quiz_answer = str(question_answer[question])
+    update.message.reply_text(text=quiz_answer)
     handle_new_question_request(update, context)
 
 
