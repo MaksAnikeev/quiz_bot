@@ -13,7 +13,7 @@ from quiz import create_quiz
 logger = logging.getLogger(__name__)
 
 
-def receive_message(vk_token, text, question_answer):
+def processing_user_responses(vk_token, text, question_answer):
     vk_session = vk.VkApi(token=vk_token)
     longpoll = VkLongPoll(vk_session)
     question = None
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     try:
         greetings = 'Приветствую! Я бот для викторины'
-        receive_message(
+        processing_user_responses(
             vk_token=vk_token,
             text=greetings,
             question_answer=question_answer,
