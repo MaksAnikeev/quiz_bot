@@ -13,10 +13,10 @@ from quiz import create_quiz
 logger = logging.getLogger(__name__)
 
 
-def receive_message(vk_token, text, question_answer, quiz_score):
-    question = None
+def receive_message(vk_token, text, question_answer):
     vk_session = vk.VkApi(token=vk_token)
     longpoll = VkLongPoll(vk_session)
+    question = None
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             if event.text == "Сдаться":
@@ -35,6 +35,7 @@ def receive_message(vk_token, text, question_answer, quiz_score):
                            user_id=event.user_id)
 
             elif not question:
+                quiz_score = 0
                 send_message(
                     user_id=event.user_id,
                     text=text,
@@ -134,15 +135,12 @@ if __name__ == "__main__":
 
     question_answer = create_quiz(quiz)
 
-    quiz_score = 0
-
     try:
         greetings = 'Приветствую! Я бот для викторины'
         receive_message(
             vk_token=vk_token,
             text=greetings,
             question_answer=question_answer,
-            quiz_score=quiz_score
         )
 
     except Exception as err:

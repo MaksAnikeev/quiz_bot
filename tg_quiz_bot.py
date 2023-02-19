@@ -22,6 +22,8 @@ class States(Enum):
 
 
 def start(update, context, question_answer):
+    quiz_score = 0
+    context.user_data['quiz_score'] = quiz_score
     context.bot_data['question_answer'] = question_answer
     user = update.effective_user
     greetings = dedent(fr'''
@@ -52,15 +54,15 @@ def handle_new_question_request(update, context):
 
 
 def handle_solution_attempt(update, context):
-    global score
+    quiz_score = context.user_data['quiz_score']
     answer = update.message.text
     question_answer = context.bot_data['question_answer']
     question = context.user_data["question"]
     quiz_answer = question_answer[question]
     if quiz_answer.partition('.')[0] == answer or\
             quiz_answer.partition(' (')[0] == answer:
-        score += 1
-        context.user_data["score"] = score
+        quiz_score += 1
+        context.user_data["quiz_score"] = quiz_score
         update.message.reply_text(text=f'{quiz_answer}')
         answer_message = 'Правильно! Поздравляю!' \
                          ' Для следующего вопроса нажми «Новый вопрос»'
@@ -107,7 +109,7 @@ def send_correct_answer(update, context):
 
 
 def send_score(update, context):
-    score = context.user_data["score"]
+    quiz_score = context.user_data['quiz_score']
     message_keyboard = [
         ["Новый вопрос", "Сдаться"],
         ["Мой счет"],
@@ -118,12 +120,13 @@ def send_score(update, context):
         resize_keyboard=True,
         one_time_keyboard=True
     )
-    update.message.reply_text(text=f'Ваш счет {score}',
+    update.message.reply_text(text=f'Ваш счет {quiz_score}',
                               reply_markup=markup)
     return States.ANSWER
 
 
 def error(update, context):
+    logger.warning('Update "%s" caused error "%s"', update, error)
     update.message.reply_text('Произошла ошибка')
 
 
@@ -151,8 +154,6 @@ if __name__ == '__main__':
         quiz = file.read().split('\n\n\n')
 
     question_answer = create_quiz(quiz)
-
-    score = 0
 
     updater = Updater(telegram_bot_token, use_context=True)
     dispatcher = updater.dispatcher
