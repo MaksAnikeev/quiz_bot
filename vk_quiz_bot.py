@@ -21,7 +21,8 @@ def processing_user_responses(vk_token, text, question_answer):
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             if event.text == "Сдаться":
                 question = send_correct_answer(question=question,
-                                               user_id=event.user_id)
+                                               user_id=event.user_id,
+                                               question_answer=question_answer)
 
             elif event.text == "Новый вопрос":
                 question = random.choice(list(question_answer))
@@ -45,7 +46,8 @@ def processing_user_responses(vk_token, text, question_answer):
                 quiz_score = handle_solution_attempt(question=question,
                                                      answer=event.text,
                                                      user_id=event.user_id,
-                                                     quiz_score=quiz_score)
+                                                     quiz_score=quiz_score,
+                                                     question_answer=question_answer)
 
 
 def send_message(user_id, text, vk_token):
@@ -67,7 +69,7 @@ def send_message(user_id, text, vk_token):
     )
 
 
-def handle_solution_attempt(question, answer, user_id, quiz_score):
+def handle_solution_attempt(question, answer, user_id, quiz_score, question_answer):
     quiz_answer = question_answer[question]
     if quiz_answer.partition('.')[0] == answer or\
             quiz_answer.partition(' (')[0] == answer:
@@ -89,7 +91,7 @@ def handle_solution_attempt(question, answer, user_id, quiz_score):
         return quiz_score
 
 
-def send_correct_answer(question, user_id):
+def send_correct_answer(question, user_id, question_answer):
     quiz_answer = question_answer[question]
     send_message(
         user_id=user_id,
