@@ -21,7 +21,8 @@ class States(Enum):
     ANSWER = auto()
 
 
-def start(update, context):
+def start(update, context, question_answer):
+    context.bot_data['question_answer'] = question_answer
     user = update.effective_user
     greetings = dedent(fr'''
                 Приветствую {user.mention_markdown_v2()}\!
@@ -42,18 +43,18 @@ def start(update, context):
     return States.START
 
 
-def handle_new_question_request(update, context, question_answer):
+def handle_new_question_request(update, context):
+    question_answer = context.bot_data['question_answer']
     question = random.choice(list(question_answer))
     update.message.reply_text(text=question)
     context.user_data["question"] = question
-    context.user_data["question_answer"] = question_answer
     return States.ANSWER
 
 
 def handle_solution_attempt(update, context):
     global score
     answer = update.message.text
-    question_answer = context.user_data["question_answer"]
+    question_answer = context.bot_data['question_answer']
     question = context.user_data["question"]
     quiz_answer = question_answer[question]
     if quiz_answer.partition('.')[0] == answer or\
@@ -98,11 +99,11 @@ def handle_solution_attempt(update, context):
 
 
 def send_correct_answer(update, context):
-    question_answer = context.user_data["question_answer"]
+    question_answer = context.bot_data['question_answer']
     question = context.user_data["question"]
     quiz_answer = question_answer[question]
     update.message.reply_text(text=f'{quiz_answer}')
-    handle_new_question_request(update, context, question_answer)
+    handle_new_question_request(update, context)
 
 
 def send_score(update, context):
@@ -119,7 +120,7 @@ def send_score(update, context):
     )
     update.message.reply_text(text=f'Ваш счет {score}',
                               reply_markup=markup)
-    return States.START
+    return States.ANSWER
 
 
 def error(update, context):
@@ -146,29 +147,26 @@ if __name__ == '__main__':
 
     telegram_bot_token = env.str("TG_BOT_TOKEN")
 
-    score = 0
-
     with open(args.quiz_path, "r", encoding="KOI8-R") as file:
         quiz = file.read().split('\n\n\n')
 
     question_answer = create_quiz(quiz)
 
+    score = 0
+
     updater = Updater(telegram_bot_token, use_context=True)
     dispatcher = updater.dispatcher
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[CommandHandler("start", partial(start,
+                                       question_answer=question_answer))],
         states={
             States.START: [
                 MessageHandler(Filters.text("Мой счет"), send_score),
-                MessageHandler(Filters.text("Новый вопрос"),
-                               partial(handle_new_question_request,
-                                       question_answer=question_answer)),
+                MessageHandler(Filters.text("Новый вопрос"), handle_new_question_request),
             ],
             States.ANSWER: [
-                MessageHandler(Filters.text("Новый вопрос"),
-                               partial(handle_new_question_request,
-                                       question_answer=question_answer)),
+                MessageHandler(Filters.text("Новый вопрос"), handle_new_question_request),
                 MessageHandler(Filters.text("Сдаться"), send_correct_answer),
                 MessageHandler(Filters.text("Мой счет"), send_score),
                 MessageHandler(Filters.text, handle_solution_attempt),
@@ -181,7 +179,8 @@ if __name__ == '__main__':
 
     dispatcher.add_handler(conv_handler)
     dispatcher.add_error_handler(error)
-    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("start", partial(start,
+                                       question_answer=question_answer)))
 
     updater.start_polling()
     updater.idle()
