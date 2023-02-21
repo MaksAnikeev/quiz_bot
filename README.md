@@ -28,7 +28,7 @@ https://vk.com/club214461314
 git clone <метод копирования>
 ```
 У вас будет 2 рабочих файла:
-- quiz_bot.py - этот файл для работы с ТГ ботом
+- tg_quiz_bot.py - этот файл для работы с ТГ ботом
 - vk_quiz_bot.py - это файл для работы с ВК
 
 ### 2. Устанавливаем библиотеки:
@@ -51,15 +51,26 @@ touch .env
 ### 5. Запуск
 
 ```
-python quiz_bot.py  
+python tg_quiz_bot.py  
 ```
 
 По умолчанию будет загружена викторина `quiz-questions/1vs1200.txt`. Если необходима другая,
 укажите это при запуске файла.
 ```
-python quiz_bot.py quiz-questions/1vs1500.txt
+python tg_quiz_bot.py quiz-questions/1vs1500.txt
 ```
 
+Для запуска бота для ВК нужно запустить `redis` на компьютере в Ubuntu
+```pycon
+$ sudo apt upgrade
+$ sudo apt upgrade
+$ sudo apt install redis-server
+$ redis-server
+```
+А далее стандартно запустить файл с ВК ботом
+```
+python vk_quiz_bot.py quiz-questions/1vs1500.txt
+```
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org).
