@@ -1,6 +1,7 @@
 import argparse
 import logging
 import random
+import redis
 
 import environs
 import vk_api as vk
@@ -32,11 +33,13 @@ def processing_user_responses(vk_token, text, question_answer):
                     vk_token=vk_token)
 
             elif event.text == "Мой счет":
+                quiz_score = int(redis_data.get(f'quiz_score{event.user_id}'))
                 send_score(quiz_score=quiz_score,
                            user_id=event.user_id)
 
             elif not question:
                 quiz_score = 0
+                redis_data.set(f'quiz_score{event.user_id}', int(quiz_score))
                 send_message(
                     user_id=event.user_id,
                     text=text,
@@ -46,8 +49,9 @@ def processing_user_responses(vk_token, text, question_answer):
                 quiz_score = handle_solution_attempt(question=question,
                                                      answer=event.text,
                                                      user_id=event.user_id,
-                                                     quiz_score=quiz_score,
+                                                     quiz_score=int(redis_data.get(f'quiz_score{event.user_id}')),
                                                      question_answer=question_answer)
+                redis_data.set(f'quiz_score{event.user_id}', int(quiz_score))
 
 
 def send_message(user_id, text, vk_token):
@@ -129,6 +133,11 @@ if __name__ == "__main__":
 
     env = environs.Env()
     env.read_env()
+
+    redis_data = redis.StrictRedis(host="localhost",
+                                   port=6379,
+                                   charset="utf-8",
+                                   decode_responses=True)
 
     vk_token = env.str("VK_TOKEN")
 
