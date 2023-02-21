@@ -2,7 +2,6 @@ import argparse
 import logging
 import random
 from enum import Enum, auto
-from functools import partial
 from textwrap import dedent
 
 import environs
@@ -24,7 +23,6 @@ class States(Enum):
 def start(update, context):
     quiz_score = 0
     context.user_data['quiz_score'] = quiz_score
-    # context.bot_data['question_answer'] = question_answer
     user = update.effective_user
     greetings = dedent(fr'''
                 Приветствую {user.mention_markdown_v2()}\!
